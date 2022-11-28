@@ -3,6 +3,77 @@
 #include<string>
 using namespace std;
 using namespace std::chrono;
+template<typename T> class Node{
+public:
+    T data;
+    Node* next;
+
+    Node(T c){
+        data=c;
+        next=NULL;
+    }
+};
+
+// Stack implementation
+template <typename T> class Stack{
+public:
+    Node<T> * head;
+
+    Stack(){
+        head=NULL;
+
+    }
+    bool empty(){
+        return head==NULL;
+    }
+    void push(T c){
+        if(head==NULL){
+            head=new Node<T> (c);
+
+        }else{
+            Node<T>* temp=head;
+            head=new Node<T>(c);
+            head->next=temp;
+        }
+    }
+    void pop(){
+        head=head->next;
+    }
+    T top(){
+        return head->data;
+    }
+};
+
+
+int positionOfOperator(char c,string formula){
+    formula=formula.substr(1);
+    formula.pop_back();
+    Stack<char> st;
+    for(int i=0;i<formula.length();i++){
+        st.push(formula[i]);
+    }
+    bool check= true;
+    int count=0;
+    int pos=formula.length();
+    while(st.empty()==false){
+        if(check==true && count==0 && st.top()==c){
+            break;
+        }
+        if(st.top()==')'){
+            count++;
+            check=false;
+        }
+        if(st.top()=='('){
+            count--;
+            check=true;
+        }
+        st.pop();
+        pos--;
+    }
+    return pos;
+}
+
+
 
 bool andIntroduction(string* proof_lines,string currentLine,int currentLineNumber,int line1Ref,int line2Ref){
     if(line1Ref>=currentLineNumber || line2Ref>=currentLineNumber){
@@ -25,8 +96,8 @@ bool implication_elimination(string* proof_lines,string currentLine,int currentL
     }
     string line1Statement=proof_lines[line1Ref-1].substr(0,proof_lines[line1Ref-1].find("/"));
     string line2Statement=proof_lines[line2Ref-1].substr(0,proof_lines[line2Ref-1].find("/"));
-    string expectedConclusion=line1Statement.substr(line1Statement.find(">")+1,line1Statement.length()-1-line1Statement.find(">")-1);
-    string hypothesis=line1Statement.substr(1,line1Statement.find(">")-1);
+    string expectedConclusion=line1Statement.substr(positionOfOperator('>',line1Statement)+1,line1Statement.length()-1-line1Statement.find(">")-1);
+    string hypothesis=line1Statement.substr(1, positionOfOperator('>',line1Statement)-1);
     if(hypothesis==line2Statement && expectedConclusion==currentLine){
         return true;
     }else{
@@ -40,7 +111,7 @@ bool orIntroduction1(string* proof_lines,string currentLine,int currentLineNumbe
     string line1Statement=proof_lines[line1Ref-1].substr(0,proof_lines[line1Ref-1].find("/"));
     string expectedOutputPart="("+line1Statement+"+";
     int l=currentLine.find(expectedOutputPart);
-    if(l>=0 && currentLine.length()>expectedOutputPart.length()+1){
+    if(l==0 && currentLine.length()>expectedOutputPart.length()+1){
         return true;
     }else{
         return false;
@@ -53,7 +124,7 @@ bool orIntroduction2(string* proof_lines,string currentLine,int currentLineNumbe
     string line1Statement=proof_lines[line1Ref-1].substr(0,proof_lines[line1Ref-1].find("/"));
     string expectedOutputPart="+"+line1Statement+")";
     int l=currentLine.find(expectedOutputPart);
-    if(l>=2 && currentLine.length()>expectedOutputPart.length()+1){
+    if(l==(currentLine.length()-expectedOutputPart.length()) && currentLine.length()>expectedOutputPart.length()+1){
         return true;
     }else{
         return false;
@@ -64,7 +135,8 @@ bool andElimination1(string* proof_lines,string currentLine,int currentLineNumbe
         return false;
     }
     string line1Statement=proof_lines[line1Ref-1].substr(0,proof_lines[line1Ref-1].find("/"));
-    string expectedOutput=line1Statement.substr(1,line1Statement.find("^")-1);
+    string expectedOutput=line1Statement.substr(1, positionOfOperator('^',line1Statement)-1);
+    expectedOutput.pop_back();
     if(expectedOutput==currentLine){
         return true;
     }else{
@@ -76,7 +148,8 @@ bool andElimination2(string* proof_lines,string currentLine,int currentLineNumbe
         return false;
     }
     string line1Statement=proof_lines[line1Ref-1].substr(0,proof_lines[line1Ref-1].find("/"));
-    string expectedOutput=line1Statement.substr(line1Statement.find("^")+1);
+    string expectedOutput=line1Statement.substr(positionOfOperator('^',line1Statement)+1);
+    expectedOutput.pop_back();
     if(expectedOutput==currentLine){
         return true;
     }else{
@@ -182,6 +255,7 @@ int main() {
     cout<<endl;
     auto duration = duration_cast<microseconds>(stop - start);
     cout<<"Execution time: "<<duration.count()<<"\xC2\xB5"<<endl;
+
 
 
 }
