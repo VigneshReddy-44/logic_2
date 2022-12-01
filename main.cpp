@@ -72,8 +72,20 @@ int positionOfOperator(char c,string formula){
     }
     return pos;
 }
-
-
+bool isOperator(char c){
+    return c=='^' || c=='+' || c=='>' || c=='~';
+}
+bool isCharacter(char c){
+    return (c>=65 && c<=90) || (c>=97 && c<=122);
+}
+//bool validFormula(string line){
+//    if(line.length()==1 && !(isCharacter(line[0]))){
+//        return false;
+//    }
+//    for(int i=0;i<line.length()-1;i++){
+//
+//    }
+//}
 
 bool andIntroduction(string* proof_lines,string currentLine,int currentLineNumber,int line1Ref,int line2Ref){
     if(line1Ref>=currentLineNumber || line2Ref>=currentLineNumber){
@@ -136,7 +148,7 @@ bool andElimination1(string* proof_lines,string currentLine,int currentLineNumbe
     }
     string line1Statement=proof_lines[line1Ref-1].substr(0,proof_lines[line1Ref-1].find("/"));
     string expectedOutput=line1Statement.substr(1, positionOfOperator('^',line1Statement)-1);
-    expectedOutput.pop_back();
+   // expectedOutput.pop_back();
     if(expectedOutput==currentLine){
         return true;
     }else{
@@ -156,7 +168,23 @@ bool andElimination2(string* proof_lines,string currentLine,int currentLineNumbe
         return false;
     }
 }
-
+bool modusTollens(string* proof_lines,string currentLine,int currentLineNumber,int line1Ref,int line2Ref){
+    if(line1Ref>=currentLineNumber || line2Ref>=currentLineNumber){
+        return false;
+    }
+    string line1Statement=proof_lines[line1Ref-1].substr(0,proof_lines[line1Ref-1].find("/"));//implication
+    string line2Statement=proof_lines[line2Ref-1].substr(0,proof_lines[line2Ref-1].find("/"));//negation
+    string expectedOutput="(~";
+    expectedOutput+=line1Statement.substr(1,positionOfOperator('>',line1Statement)-1);
+    expectedOutput+=")";
+    string rhs=line1Statement.substr(positionOfOperator('>',line1Statement)+1);
+    rhs.pop_back();
+    if(("(~"+rhs+")")==line2Statement && expectedOutput==currentLine){
+        return true;
+    }else{
+        return false;
+    }
+}
 
 
 bool proof_Evaluator(string* proof_lines,int number_of_lines){
@@ -178,7 +206,7 @@ bool proof_Evaluator(string* proof_lines,int number_of_lines){
         }
         string rule=ruleTemp.substr(0,ruleTemp.find("/"));
         ruleTemp=ruleTemp.substr(ruleTemp.find(rule)+rule.length()+1);
-        if(rule=="^i" || rule==">e"){
+        if(rule=="^i" || rule==">e" || rule=="MT"){
             string lineRef1=ruleTemp.substr(0,ruleTemp.find("/"));
             string lineRef2=ruleTemp.substr(ruleTemp.find("/")+1);
             line1= stoi(lineRef1);
@@ -191,6 +219,12 @@ bool proof_Evaluator(string* proof_lines,int number_of_lines){
             }
             if(rule==">e"){
                 bool b=implication_elimination(proof_lines,statement,i+1,line1,line2);
+                if(b==false){
+                    return false;
+                }
+            }
+            if(rule=="MT"){
+                bool b= modusTollens(proof_lines,statement,i+1,line1,line2);
                 if(b==false){
                     return false;
                 }
